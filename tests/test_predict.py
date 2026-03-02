@@ -1,7 +1,6 @@
 """Tests for psspnn.model.predict."""
 
 import numpy as np
-import pytest
 
 from psspnn.model.predict import apply_contiguity, predict_sequence, raw_state
 

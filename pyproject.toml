@@ -1,22 +1,26 @@
 [tool.poetry]
 name = "psspnn"
 version = "0.1.0"
-description = "Holley & Karplus 1989 protein secondary structure prediction with a neural network"
+description = "Model from Holley & Karplus 1989 Protein secondary structure prediction with a neural network"
 authors = ["BioTeam"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/bioteam/psspnn"
-keywords = ["bioinformatics", "protein", "secondary-structure", "neural-network"]
+keywords = [
+    "bioinformatics",
+    "protein",
+    "secondary-structure",
+    "neural-network",
+]
 classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Intended Audience :: Science/Research",
 ]
-packages = [{include = "psspnn", from = "src"}]
+packages = [{ include = "psspnn", from = "src" }]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
 numpy = ">=1.24"
-tensorflow = ">=2.13"
 biopython = ">=1.80"
 pydssp = ">=0.9"
 click = ">=8.0"
@@ -34,3 +38,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.pyright]
+typeCheckingMode = "basic"

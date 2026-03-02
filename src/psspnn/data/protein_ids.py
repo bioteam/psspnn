@@ -1,7 +1,9 @@
 """
-Ordered list of the 62 proteins used in Holley & Karplus (1989).
+Ordered list of the proteins used in Holley & Karplus (1989).
 
-The first 48 are the training set; the last 14 are the test set.
+The first 47 are the training set; the last 14 are the test set.
+The original paper used 48 training proteins but 1PTI has been removed
+from the PDB; 5PTI (same protein, BPTI) serves as its replacement.
 
 Training set IDs come from table 1 of Kabsch & Sander (1983) FEBS Lett 155:179-182,
 which is cited by Holley & Karplus as the source of their 62-protein benchmark.
@@ -13,7 +15,7 @@ flags 1HBL as obsolete (replaced by 1LH1 in Table 2). Download utilities handle
 retrieval failures gracefully.
 """
 
-# 48 training proteins (Kabsch & Sander 1983 table 1, first 48 entries)
+# 47 training proteins (Kabsch & Sander 1983 table 1; 1PTI removed, 5PTI kept)
 # Order matters: this determines the train/test split.
 TRAIN_IDS: list[str] = [
     "2RSA", "3RNS", "1RBX", "1PPT", "1SBT", "2PTN", "2SNS", "3FAB",
@@ -21,7 +23,7 @@ TRAIN_IDS: list[str] = [
     "3CYT", "1PCY", "2B5C", "2C2C", "1C2C", "2FDN", "1FX1", "1FDX",
     "1HIP", "3ICB", "1BP2", "1ABE", "3APP", "2APP", "1APE", "1CPP",
     "2CGA", "1CHO", "3CPA", "2PKA", "1GCN", "2CRK", "1LH2", "4INS",
-    "3INS", "1INS", "1PTI", "5PTI", "2OVO", "1ACX", "2ACT", "1LZ1",
+    "3INS", "1INS", "5PTI", "2OVO", "1ACX", "2ACT", "1LZ1",
 ]
 
 # 14 test proteins (Holley & Karplus 1989, Table 2)

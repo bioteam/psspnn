@@ -14,9 +14,7 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
-
 import click
-import numpy as np
 
 DEFAULT_CACHE = Path.home() / ".psspnn" / "pdb_cache"
 DEFAULT_MODEL = Path.home() / ".psspnn" / "model.npz"
@@ -94,6 +92,24 @@ def download(cache_dir: Path, split: str) -> None:
 @click.option("--tol", default=2e-4, show_default=True, help="Fractional-change stopping threshold.")
 @click.option("--seed", default=None, type=int, help="Random seed for reproducibility.")
 @click.option("--verbose/--no-verbose", default=True, show_default=True)
+@click.option(
+    "--checkpoint-dir",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Directory for periodic checkpoint saves.",
+)
+@click.option(
+    "--checkpoint-every",
+    default=100,
+    show_default=True,
+    help="Save a checkpoint every N cycles.",
+)
+@click.option(
+    "--resume/--no-resume",
+    default=False,
+    show_default=True,
+    help="Restore from the latest checkpoint in --checkpoint-dir and continue.",
+)
 def train(
     cache_dir: Path,
     model_out: Path,
@@ -104,6 +120,9 @@ def train(
     tol: float,
     seed: int | None,
     verbose: bool,
+    checkpoint_dir: Path | None,
+    checkpoint_every: int,
+    resume: bool,
 ) -> None:
     """Train the network on the 48 training proteins."""
     from .data.protein_ids import get_split
@@ -153,6 +172,9 @@ def train(
     result = _train(
         net, X_train, y_train,
         learning_rate=lr, max_cycles=max_cycles, tol=tol, verbose=verbose,
+        checkpoint_dir=checkpoint_dir,
+        checkpoint_every=checkpoint_every,
+        resume=resume,
     )
 
     status = "converged" if result.converged else f"reached max_cycles={max_cycles}"

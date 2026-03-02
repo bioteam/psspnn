@@ -1,18 +1,20 @@
 """
 Download PDB files from the RCSB Protein Data Bank.
 
-Uses biopython's PDBList for retrieval. Files are cached locally; if a file
-already exists it is not re-downloaded.
+Downloads PDB-format files directly from files.rcsb.org. Files are cached
+locally; if a file already exists it is not re-downloaded.
 """
 
 from __future__ import annotations
 
 import logging
 from pathlib import Path
-
-from Bio.PDB import PDBList
+from urllib.request import urlretrieve
+from urllib.error import HTTPError
 
 log = logging.getLogger(__name__)
+
+RCSB_URL = "https://files.rcsb.org/download/{pdb_id}.pdb"
 
 
 def fetch_pdb(pdb_id: str, cache_dir: Path) -> Path | None:
@@ -28,32 +30,22 @@ def fetch_pdb(pdb_id: str, cache_dir: Path) -> Path | None:
 
     Returns
     -------
-    Path to the downloaded .ent file, or None if the download failed.
+    Path to the downloaded .pdb file, or None if the download failed.
     """
     cache_dir.mkdir(parents=True, exist_ok=True)
-    pdb_id_lower = pdb_id.lower()
-    dest = cache_dir / f"pdb{pdb_id_lower}.ent"
+    pdb_id_upper = pdb_id.upper()
+    dest = cache_dir / f"pdb{pdb_id.lower()}.pdb"
     if dest.exists():
         return dest
 
-    pl = PDBList(verbose=False)
+    url = RCSB_URL.format(pdb_id=pdb_id_upper)
     try:
-        result = pl.retrieve_pdb_file(
-            pdb_id,
-            file_type="pdb",
-            pdir=str(cache_dir),
-            overwrite=False,
-        )
-        if result:
-            result_path = Path(result)
-            if result_path.exists():
-                # PDBList may write to a subdirectory; move to flat cache_dir
-                if result_path != dest:
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    result_path.rename(dest)
-                return dest
-    except Exception as exc:
+        urlretrieve(url, dest)
+        return dest
+    except (HTTPError, OSError) as exc:
         log.warning("Failed to download %s: %s", pdb_id, exc)
+        # Clean up partial file
+        dest.unlink(missing_ok=True)
 
     log.warning("PDB entry %s could not be retrieved.", pdb_id)
     return None

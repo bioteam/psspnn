@@ -2,7 +2,7 @@
 Neural network for protein secondary structure prediction.
 
 Implements the feed-forward network described in Holley & Karplus (1989)
-using TensorFlow/Keras.
+using numpy.
 
 Architecture:
     (window_size * 21)  ->  [hidden_units]  ->  2
@@ -18,15 +18,15 @@ import json
 from pathlib import Path
 
 import numpy as np
-import tensorflow as tf
+
+
+def _sigmoid(x: np.ndarray) -> np.ndarray:
+    return 1.0 / (1.0 + np.exp(-x))
 
 
 class HolleyKarplusNet:
     """
-    TensorFlow/Keras implementation of the Holley & Karplus 1989 network.
-
-    Wraps a tf.keras.Sequential model and exposes a numpy-compatible
-    predict() method and .npz save/load for persistence.
+    Numpy implementation of the Holley & Karplus 1989 network.
 
     Parameters
     ----------
@@ -49,46 +49,28 @@ class HolleyKarplusNet:
         self.hidden_units = hidden_units
         self.seed = seed
         self.n_input: int = window_size * 21  # 357 for default window
-        self.model = self._build_model()
+        self._init_weights()
 
     # ------------------------------------------------------------------
-    # Model construction
+    # Weight initialisation
     # ------------------------------------------------------------------
 
-    def _build_model(self) -> tf.keras.Sequential:
+    def _init_weights(self) -> None:
         """
-        Build and return a Keras Sequential model.
-
-        Weights and biases are initialised uniformly in [-0.1, 0.1] as
-        specified by Holley & Karplus (1989).
+        Initialise weights uniformly in [-0.1, 0.1] as specified by
+        Holley & Karplus (1989).
         """
-        if self.seed is not None:
-            tf.keras.utils.set_random_seed(self.seed)
-
-        init = tf.keras.initializers.RandomUniform(minval=-0.1, maxval=0.1)
-        layers: list[tf.keras.layers.Layer] = []
-
+        rng = np.random.default_rng(self.seed)
         if self.hidden_units > 0:
-            layers.append(
-                tf.keras.layers.Dense(
-                    self.hidden_units,
-                    activation="sigmoid",
-                    kernel_initializer=init,
-                    bias_initializer=init,
-                )
-            )
-        layers.append(
-            tf.keras.layers.Dense(
-                2,
-                activation="sigmoid",
-                kernel_initializer=init,
-                bias_initializer=init,
-            )
-        )
-
-        model = tf.keras.Sequential(layers)
-        model.build(input_shape=(None, self.n_input))
-        return model
+            self.W1 = rng.uniform(-0.1, 0.1, (self.n_input, self.hidden_units)).astype(np.float32)
+            self.b1 = rng.uniform(-0.1, 0.1, (self.hidden_units,)).astype(np.float32)
+            self.W2 = rng.uniform(-0.1, 0.1, (self.hidden_units, 2)).astype(np.float32)
+            self.b2 = rng.uniform(-0.1, 0.1, (2,)).astype(np.float32)
+        else:
+            self.W1 = rng.uniform(-0.1, 0.1, (self.n_input, 2)).astype(np.float32)
+            self.b1 = rng.uniform(-0.1, 0.1, (2,)).astype(np.float32)
+            self.W2 = None
+            self.b2 = None
 
     # ------------------------------------------------------------------
     # Inference
@@ -106,8 +88,12 @@ class HolleyKarplusNet:
         -------
         np.ndarray, shape (N, 2), values in (0, 1).
         """
-        X_tf = tf.cast(X, tf.float32)
-        return self.model(X_tf, training=False).numpy()
+        X = np.asarray(X, dtype=np.float32)
+        if self.hidden_units > 0:
+            h = _sigmoid(X @ self.W1 + self.b1)
+            return _sigmoid(h @ self.W2 + self.b2)
+        else:
+            return _sigmoid(X @ self.W1 + self.b1)
 
     # ------------------------------------------------------------------
     # Weight access (for tests and inspection)
@@ -115,7 +101,9 @@ class HolleyKarplusNet:
 
     def get_weights(self) -> list[np.ndarray]:
         """Return model weights as a list of numpy arrays."""
-        return self.model.get_weights()
+        if self.hidden_units > 0:
+            return [self.W1, self.b1, self.W2, self.b2]
+        return [self.W1, self.b1]
 
     # ------------------------------------------------------------------
     # Persistence
@@ -132,16 +120,10 @@ class HolleyKarplusNet:
             at the same location with the extension replaced by .json.
         """
         path = Path(path)
-        weights = self.model.get_weights()
-        arrays: dict[str, np.ndarray] = {}
+        arrays: dict[str, np.ndarray] = {"W1": self.W1, "b1": self.b1}
         if self.hidden_units > 0:
-            arrays["W1"] = weights[0]   # (n_input, hidden)
-            arrays["b1"] = weights[1]   # (hidden,)
-            arrays["W2"] = weights[2]   # (hidden, 2)
-            arrays["b2"] = weights[3]   # (2,)
-        else:
-            arrays["W1"] = weights[0]   # (n_input, 2)
-            arrays["b1"] = weights[1]   # (2,)
+            arrays["W2"] = self.W2
+            arrays["b2"] = self.b2
         np.savez(path, **arrays)
         meta = {
             "window_size": self.window_size,
@@ -169,10 +151,9 @@ class HolleyKarplusNet:
             seed=meta.get("seed"),
         )
         data = np.load(path)
+        net.W1 = data["W1"]
+        net.b1 = data["b1"]
         if meta["hidden_units"] > 0:
-            net.model.set_weights(
-                [data["W1"], data["b1"], data["W2"], data["b2"]]
-            )
-        else:
-            net.model.set_weights([data["W1"], data["b1"]])
+            net.W2 = data["W2"]
+            net.b2 = data["b2"]
         return net

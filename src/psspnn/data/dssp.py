@@ -19,7 +19,8 @@ from pathlib import Path
 import numpy as np
 import pydssp
 from Bio.PDB import PDBParser
-from Bio.PDB.Polypeptide import is_aa, three_to_one
+from Bio.PDB.Polypeptide import is_aa
+from Bio.Data.PDBData import protein_letters_3to1
 
 log = logging.getLogger(__name__)
 
@@ -66,7 +67,7 @@ def _extract_backbone(structure) -> tuple[np.ndarray, str]:
                 continue
             residue_coords.append(atoms)
             try:
-                seq_chars.append(three_to_one(res.get_resname()))
+                seq_chars.append(protein_letters_3to1[res.get_resname()])
             except Exception:
                 seq_chars.append("X")
         break  # first chain only

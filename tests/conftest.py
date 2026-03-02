@@ -1,6 +1,5 @@
 """Shared pytest fixtures for psspnn tests."""
 
-import numpy as np
 import pytest
 
 from psspnn.model.network import HolleyKarplusNet
