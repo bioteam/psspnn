@@ -69,7 +69,7 @@ Files are cached to `~/.psspnn/pdb_cache/`. Re-running is safe; already-cached f
 psspnn train --verbose
 ```
 
-Trains on the 47 proteins from the training set. Progress is printed every 10 cycles. The model is saved to `~/.psspnn/model.npz`.
+Trains on the 47 proteins from the training set. Progress is printed every cycle. The model is saved to `~/.psspnn/model.npz`.
 
 Options:
 
@@ -147,5 +147,5 @@ poetry run pytest
 ## Notes
 
 - The learning rate (0.1) is not stated in the paper. The value from Rumelhart et al. (1986) is used as the default. Adjust with `--lr` if convergence is slow.
-- The 47 training protein IDs are sourced from Kabsch & Sander (1983) FEBS Lett 155:179 table 1. Some 1983-era PDB entries have been superseded; failed downloads are logged as warnings.
+- The training protein IDs are sourced from Kabsch & Sander (1983) FEBS Lett 155:179 table 1. Some 1983-era PDB entries have been superseded; failed downloads are logged as warnings.
 - The DSSP 3-state mapping used is: {H, G, I} → H, {E, B} → E, {T, S, ' '} → C.

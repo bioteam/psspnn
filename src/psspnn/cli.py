@@ -91,7 +91,7 @@ def download(cache_dir: Path, split: str) -> None:
 @click.option("--max-cycles", default=2000, show_default=True)
 @click.option("--tol", default=2e-4, show_default=True, help="Fractional-change stopping threshold.")
 @click.option("--seed", default=None, type=int, help="Random seed for reproducibility.")
-@click.option("--verbose/--no-verbose", default=True, show_default=True)
+@click.option("--verbose/--no-verbose", default=False, show_default=True)
 @click.option(
     "--checkpoint-dir",
     type=click.Path(path_type=Path),
@@ -135,7 +135,8 @@ def train(
     pdb_ids = get_split("train")
     proteins: list[tuple[str, list[str]]] = []
 
-    click.echo("Loading training proteins …")
+    if verbose:
+        click.echo("Loading training proteins …")
     for pid in pdb_ids:
         pdb_path = fetch_pdb(pid, cache_dir)
         if pdb_path is None:
@@ -153,21 +154,24 @@ def train(
         click.echo("No proteins loaded. Run 'psspnn download' first.", err=True)
         sys.exit(1)
 
-    click.echo(f"Building dataset from {len(proteins)} proteins …")
+    if verbose:
+        total_residues = sum(len(seq) for seq, _ in proteins)
+        click.echo(f"Building dataset from {len(proteins)} proteins ({total_residues} residues) …")
     X_train, y_train = build_dataset(proteins, window_size=window)
-    click.echo(f"  X shape: {X_train.shape}  y shape: {y_train.shape}")
+    if verbose:
+        click.echo(f"  X shape: {X_train.shape}  y shape: {y_train.shape}")
 
-    # Report class composition
-    n = len(y_train)
-    n_h = int((y_train[:, 0] == 1).sum())
-    n_e = int((y_train[:, 1] == 1).sum())
-    n_c = n - n_h - n_e
-    click.echo(
-        f"  Composition: {n_h/n:.0%} H  {n_e/n:.0%} E  {n_c/n:.0%} C"
-        f"  (paper: 26% H  20% E  54% C)"
-    )
+        # Report class composition
+        n = len(y_train)
+        n_h = int((y_train[:, 0] == 1).sum())
+        n_e = int((y_train[:, 1] == 1).sum())
+        n_c = n - n_h - n_e
+        click.echo(
+            f"  Composition: {n_h/n:.0%} H  {n_e/n:.0%} E  {n_c/n:.0%} C"
+            f"  (paper: 26% H  20% E  54% C)"
+        )
 
-    click.echo("Training …")
+        click.echo("Training …")
     net = HolleyKarplusNet(window_size=window, hidden_units=hidden, seed=seed)
     result = _train(
         net, X_train, y_train,

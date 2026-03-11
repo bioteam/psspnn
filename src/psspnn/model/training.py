@@ -7,7 +7,7 @@ loss and stopping criterion from Holley & Karplus (1989):
     Loss:  E = sum_c sum_j (O_{j,c} - D_{j,c})^2      [Eq. 1 in paper]
     Stop:  |E_prev - E_curr| / E_prev < 2e-4
 
-One "cycle" = one complete pass through all training samples with a
+One "cycle" (i.e. epoch) = one complete pass through all training samples with a
 single weight update at the end. This matches the paper: "all of the
 training proteins are presented to the network and the input window
 moves through the amino acid sequences one residue at a time. At the
@@ -65,8 +65,8 @@ def train(
     learning_rate: float = 0.1,
     max_cycles: int = 2000,
     tol: float = 2e-4,
-    verbose: bool = True,
-    print_every: int = 10,
+    verbose: bool = False,
+    print_every: int = 1,
     checkpoint_dir: Path | None = None,
     checkpoint_every: int = 100,
     resume: bool = False,
@@ -199,10 +199,9 @@ def train(
         # ----------------------------------------------------------
         # Stopping criterion
         # ----------------------------------------------------------
+        frac_change: float | None = None
         if prev_E is not None:
             frac_change = abs(prev_E - E) / (abs(prev_E) + 1e-12)
-            if verbose and cycle % print_every == 0:
-                print(f"Cycle {cycle:5d}  E={E:.4f}  Delta={frac_change:.2e}")
             if frac_change < tol:
                 if verbose:
                     print(
@@ -211,8 +210,12 @@ def train(
                     )
                 result.converged = True
                 break
-        elif verbose:
-            print(f"Cycle {cycle:5d}  E={E:.4f}")
+
+        if verbose and cycle % print_every == 0:
+            if frac_change is not None:
+                print(f"Cycle {cycle:5d}  E={E:.4f}  Delta={frac_change:.2e}")
+            else:
+                print(f"Cycle {cycle:5d}  E={E:.4f}")
 
         prev_E = E
 
