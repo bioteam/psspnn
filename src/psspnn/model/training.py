@@ -160,16 +160,17 @@ def train(
         # dE/do_j = 2 * (o_j - y_j)
         # delta_out = dE/do * sigmoid'(z_o) = 2*(out - y) * out*(1-out)
         delta_out = 2.0 * (out - y) * out * (1.0 - out)  # (N, 2)
+        N = X.shape[0]
 
         if net.hidden_units > 0:
-            dW2 = h.T @ delta_out                 # (hidden, 2)
-            db2 = delta_out.sum(axis=0)           # (2,)
+            dW2 = (h.T @ delta_out) / N           # (hidden, 2)
+            db2 = delta_out.sum(axis=0) / N       # (2,)
             delta_h = (delta_out @ net.W2.T) * h * (1.0 - h)  # (N, hidden)
-            dW1 = X.T @ delta_h                   # (n_input, hidden)
-            db1 = delta_h.sum(axis=0)             # (hidden,)
+            dW1 = (X.T @ delta_h) / N             # (n_input, hidden)
+            db1 = delta_h.sum(axis=0) / N         # (hidden,)
         else:
-            dW1 = X.T @ delta_out                 # (n_input, 2)
-            db1 = delta_out.sum(axis=0)           # (2,)
+            dW1 = (X.T @ delta_out) / N           # (n_input, 2)
+            db1 = delta_out.sum(axis=0) / N       # (2,)
 
         # ----------------------------------------------------------
         # Weight update (plain SGD, no momentum)

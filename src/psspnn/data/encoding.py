@@ -23,10 +23,12 @@ N_AA: int = 21      # 20 amino acids + 1 null
 
 # Target vectors for the two output units: (helix, sheet)
 # (1,0)=helix, (0,1)=sheet, (0,0)=coil
+# Offset targets (0.1/0.9) avoid driving sigmoid activations into saturation,
+# which is standard practice for sigmoid-output networks (Rumelhart et al. 1986).
 SS_TO_TARGET: dict[str, np.ndarray] = {
-    "H": np.array([1.0, 0.0], dtype=np.float32),
-    "E": np.array([0.0, 1.0], dtype=np.float32),
-    "C": np.array([0.0, 0.0], dtype=np.float32),
+    "H": np.array([0.9, 0.1], dtype=np.float32),
+    "E": np.array([0.1, 0.9], dtype=np.float32),
+    "C": np.array([0.1, 0.1], dtype=np.float32),
 }
 
 

@@ -1,8 +1,12 @@
 """Tests for psspnn.model.predict."""
 
 import numpy as np
+import pytest
 
+from psspnn.data.encoding import build_dataset
+from psspnn.model.network import HolleyKarplusNet
 from psspnn.model.predict import apply_contiguity, predict_sequence, raw_state
+from psspnn.model.training import train
 
 
 class TestRawState:
@@ -98,3 +102,47 @@ class TestPredictSequence:
         raw_out, preds = predict_sequence(net_2h, "A", window_size=5)
         assert raw_out.shape == (1, 2)
         assert len(preds) == 1
+
+
+class TestEndToEnd:
+    """Train a small network and verify it predicts known secondary structures."""
+
+    @pytest.fixture(scope="class")
+    def trained_net(self):
+        """Train a network on synthetic proteins with known structure."""
+        helix_seq = "AEAAAKEAAAKEAAAKEAAAK"
+        helix_ss = ["H"] * len(helix_seq)
+
+        sheet_seq = "VVIVTIVVIVTIVVIVTIVVV"
+        sheet_ss = ["E"] * len(sheet_seq)
+
+        coil_seq = "GSNGSGSNGSGSNGSGSNGSG"
+        coil_ss = ["C"] * len(coil_seq)
+
+        proteins = [
+            (helix_seq, helix_ss),
+            (sheet_seq, sheet_ss),
+            (coil_seq, coil_ss),
+        ]
+        X, y = build_dataset(proteins, window_size=17)
+        net = HolleyKarplusNet(window_size=17, hidden_units=2, seed=42)
+        train(net, X, y, learning_rate=0.1, max_cycles=2000, tol=1e-6)
+        return net
+
+    def test_helix_prediction(self, trained_net):
+        """A strongly helical sequence should be predicted mostly as helix."""
+        _, preds = predict_sequence(trained_net, "AEAAAKEAAAKEAAAKEAAAK")
+        helix_frac = preds.count("H") / len(preds)
+        assert helix_frac > 0.5, f"Expected mostly helix, got {helix_frac:.0%} H"
+
+    def test_sheet_prediction(self, trained_net):
+        """A strongly sheet-like sequence should be predicted mostly as sheet."""
+        _, preds = predict_sequence(trained_net, "VVIVTIVVIVTIVVIVTIVVV")
+        sheet_frac = preds.count("E") / len(preds)
+        assert sheet_frac > 0.5, f"Expected mostly sheet, got {sheet_frac:.0%} E"
+
+    def test_coil_prediction(self, trained_net):
+        """A coil-like sequence should be predicted mostly as coil."""
+        _, preds = predict_sequence(trained_net, "GSNGSGSNGSGSNGSGSNGSG")
+        coil_frac = preds.count("C") / len(preds)
+        assert coil_frac > 0.5, f"Expected mostly coil, got {coil_frac:.0%} C"

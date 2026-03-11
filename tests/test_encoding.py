@@ -77,22 +77,22 @@ class TestSequenceWindows:
         assert y.shape == (2,)
 
     def test_helix_target(self, tiny_sequence, tiny_ss):
-        # tiny_ss[0] = 'H' → target should be (1, 0)
+        # tiny_ss[0] = 'H' → target should be (0.9, 0.1)
         windows = list(sequence_windows(tiny_sequence, tiny_ss, window_size=5))
         _, y = windows[0]
-        np.testing.assert_array_equal(y, [1.0, 0.0])
+        np.testing.assert_array_almost_equal(y, [0.9, 0.1])
 
     def test_sheet_target(self, tiny_sequence, tiny_ss):
-        # tiny_ss[4] = 'E' → target should be (0, 1)
+        # tiny_ss[4] = 'E' → target should be (0.1, 0.9)
         windows = list(sequence_windows(tiny_sequence, tiny_ss, window_size=5))
         _, y = windows[4]
-        np.testing.assert_array_equal(y, [0.0, 1.0])
+        np.testing.assert_array_almost_equal(y, [0.1, 0.9])
 
     def test_coil_target(self, tiny_sequence, tiny_ss):
-        # tiny_ss[6] = 'C' → target should be (0, 0)
+        # tiny_ss[6] = 'C' → target should be (0.1, 0.1)
         windows = list(sequence_windows(tiny_sequence, tiny_ss, window_size=5))
         _, y = windows[6]
-        np.testing.assert_array_equal(y, [0.0, 0.0])
+        np.testing.assert_array_almost_equal(y, [0.1, 0.1])
 
     def test_terminal_padding_uses_null(self, tiny_sequence, tiny_ss):
         # For center=0, window_size=5 (half=2), positions -2 and -1 are padded
