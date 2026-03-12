@@ -62,7 +62,7 @@ def train(
     net: HolleyKarplusNet,
     X_train: np.ndarray,
     y_train: np.ndarray,
-    learning_rate: float = 0.1,
+    learning_rate: float = 10.0,
     max_cycles: int = 2000,
     tol: float = 2e-4,
     verbose: bool = False,

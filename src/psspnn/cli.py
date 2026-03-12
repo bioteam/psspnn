@@ -87,7 +87,7 @@ def download(cache_dir: Path, split: str) -> None:
 )
 @click.option("--window", default=17, show_default=True, help="Input window size.")
 @click.option("--hidden", default=2, show_default=True, help="Hidden layer size (0 = no hidden layer).")
-@click.option("--lr", default=0.1, show_default=True, help="Learning rate.")
+@click.option("--lr", default=10.0, show_default=True, help="Learning rate.")
 @click.option("--max-cycles", default=2000, show_default=True)
 @click.option("--tol", default=2e-4, show_default=True, help="Fractional-change stopping threshold.")
 @click.option("--seed", default=None, type=int, help="Random seed for reproducibility.")
@@ -163,8 +163,8 @@ def train(
 
         # Report class composition
         n = len(y_train)
-        n_h = int((y_train[:, 0] == 1).sum())
-        n_e = int((y_train[:, 1] == 1).sum())
+        n_h = int((y_train[:, 0] > 0.5).sum())
+        n_e = int((y_train[:, 1] > 0.5).sum())
         n_c = n - n_h - n_e
         click.echo(
             f"  Composition: {n_h/n:.0%} H  {n_e/n:.0%} E  {n_c/n:.0%} C"

@@ -146,3 +146,54 @@ class TestEndToEnd:
         _, preds = predict_sequence(trained_net, "GSNGSGSNGSGSNGSGSNGSG")
         coil_frac = preds.count("C") / len(preds)
         assert coil_frac > 0.5, f"Expected mostly coil, got {coil_frac:.0%} C"
+
+
+class TestEndToEndMixed:
+    """Train on a mixed H/E/C protein and verify all three states are predicted."""
+
+    # Sperm whale myoglobin B-E helix region with flanking coil and strand
+    MYO_SEQ = "LFTGHPETLEKFDKFKHLKTEAEMKASEDLKKHGTVVLTALGGILK"
+    #          CHHHHCHHHHHHCCCCHHHHHHHHHHHHHHHCCCEEECC HHHHHHHH
+    MYO_SS = list(
+        "CHHHHCHHHHHHCCCCHHHHHHHHHHHHHHCCCEEECCHHHHHHHH"
+    )
+
+    @pytest.fixture(scope="class")
+    def trained_net(self):
+        helix_seq = "AEAAAKEAAAKEAAAKEAAAK"
+        sheet_seq = "VVIVTIVVIVTIVVIVTIVVV"
+        coil_seq = "GSNGSGSNGSGSNGSGSNGSG"
+        proteins = [
+            (helix_seq, ["H"] * len(helix_seq)),
+            (sheet_seq, ["E"] * len(sheet_seq)),
+            (coil_seq, ["C"] * len(coil_seq)),
+            (self.MYO_SEQ, self.MYO_SS),
+        ]
+        X, y = build_dataset(proteins, window_size=17)
+        net = HolleyKarplusNet(window_size=17, hidden_units=2, seed=42)
+        train(net, X, y, learning_rate=0.1, max_cycles=2000, tol=1e-6)
+        return net
+
+    def test_all_three_states_predicted(self, trained_net):
+        """A mixed-structure sequence should produce H, E, and C predictions."""
+        _, preds = predict_sequence(trained_net, self.MYO_SEQ)
+        states = set(preds)
+        assert "H" in states, "Expected helix predictions"
+        assert "E" in states, "Expected sheet predictions"
+        assert "C" in states, "Expected coil predictions"
+
+    def test_helix_regions_mostly_correct(self, trained_net):
+        """Residues known to be helix should be predicted mostly as helix."""
+        _, preds = predict_sequence(trained_net, self.MYO_SEQ)
+        helix_indices = [i for i, s in enumerate(self.MYO_SS) if s == "H"]
+        helix_correct = sum(1 for i in helix_indices if preds[i] == "H")
+        frac = helix_correct / len(helix_indices)
+        assert frac > 0.5, f"Expected >50% helix correct, got {frac:.0%}"
+
+    def test_coil_regions_mostly_correct(self, trained_net):
+        """Residues known to be coil should be predicted mostly as coil."""
+        _, preds = predict_sequence(trained_net, self.MYO_SEQ)
+        coil_indices = [i for i, s in enumerate(self.MYO_SS) if s == "C"]
+        coil_correct = sum(1 for i in coil_indices if preds[i] == "C")
+        frac = coil_correct / len(coil_indices)
+        assert frac > 0.3, f"Expected >30% coil correct, got {frac:.0%}"

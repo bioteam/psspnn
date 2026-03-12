@@ -13,7 +13,7 @@ Input (17 × 21 = 357 units)
 Hidden (2 units, default)
    ↓
 Output (2 units)
-   (1,0) = helix   (0,1) = sheet   (0,0) = coil
+   (0.9, 0.1) = helix   (0.1, 0.9) = sheet   (0.1, 0.1) = coil
 ```
 
 Training uses full-batch backpropagation (Rumelhart et al. 1986 [doi:10.1038/323533a0](https://doi.org/10.1038/323533a0)) minimising the sum of squared errors. Training stops when the fractional change in loss per cycle drops below 2×10⁻⁴.
@@ -28,11 +28,11 @@ With 2 output units you can encode 3 classes using a binary scheme:
 
 | Output 1 | Output 2 | Class |
 | -------- | -------- | ----- |
-| 1 | 0 | Helix (H) |
-| 0 | 1 | Sheet (E) |
-| 0 | 0 | Coil (C) |
+| 0.9 | 0.1 | Helix (H) |
+| 0.1 | 0.9 | Sheet (E) |
+| 0.1 | 0.1 | Coil (C) |
 
-Coil is the "default" — it's what you get when neither output unit is strongly activated, coil is essentially "neither helix nor sheet," so two binary decisions are sufficient to distinguish all three states. A 3-unit one-hot output layer (one neuron per class) would also work but would add extra parameters.
+Offset targets (0.1/0.9 instead of 0/1) prevent sigmoid saturation, which is standard practice for sigmoid-output networks (Rumelhart et al. 1986). Coil is the "default" — it's what you get when neither output unit is strongly activated, coil is essentially "neither helix nor sheet," so two binary decisions are sufficient to distinguish all three states. A 3-unit one-hot output layer (one neuron per class) would also work but would add extra parameters.
 
 ## Requirements
 
@@ -77,7 +77,7 @@ Options:
 | ------ | --------- | ------------- |
 | `--window` | 17 | Input window size |
 | `--hidden` | 2 | Hidden layer size (0 = no hidden layer) |
-| `--lr` | 0.1 | Learning rate |
+| `--lr` | 10.0 | Learning rate |
 | `--max-cycles` | 2000 | Maximum training cycles |
 | `--tol` | 2e-4 | Fractional-change stopping threshold |
 | `--seed` | — | Random seed for reproducibility |
@@ -96,14 +96,14 @@ Prints per-protein percent-correct and aggregate quality indices (percent correc
 ### 4. Predict
 
 ```bash
-psspnn predict ACDEFGHIKLMNPQRSTVWY
+psspnn predict LFTGHPETLEKFDKFKHLKTEAEMKASEDLKKHGTVVLTALGGILK
 ```
 
 Outputs predictions as a string of H (helix), E (sheet), C (coil):
 
 ```shell
-Sequence:   ACDEFGHIKLMNPQRSTVWY
-Prediction: CCCCCCCCCCCCCCCCCCCC
+Sequence:   LFTGHPETLEKFDKFKHLKTEAEMKASEDLKKHGTVVLTALGGILK
+Prediction: CCCCCHHHHHHHHHHHHHHHHHHHHHHHHHHHHCEEEHHHHHCCCC
 ```
 
 Use `--format table` for per-residue output with raw network activations.
@@ -146,6 +146,6 @@ poetry run pytest
 
 ## Notes
 
-- The learning rate (0.1) is not stated in the paper. The value from Rumelhart et al. (1986) is used as the default. Adjust with `--lr` if convergence is slow.
+- The learning rate is not stated in the paper. Rumelhart et al. (1986) used 0.1 for per-pattern updates; since this implementation uses full-batch training with mean gradients, the default is 10.0. Adjust with `--lr` if convergence is slow.
 - The training protein IDs are sourced from Kabsch & Sander (1983) FEBS Lett 155:179 table 1. Some 1983-era PDB entries have been superseded; failed downloads are logged as warnings.
-- The DSSP 3-state mapping used is: {H, G, I} → H, {E, B} → E, {T, S, ' '} → C.
+- The DSSP (Define Secondary Structure of Proteins; Kabsch & Sander, 1983) 8-to-3 state mapping used is: {H, G, I} → H, {E, B} → E, {T, S, ' '} → C.
