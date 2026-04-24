@@ -4,12 +4,37 @@ Neural network for protein secondary structure prediction.
 Implements the feed-forward network described in Holley & Karplus (1989)
 using numpy.
 
-Architecture:
-    (window_size * 21)  ->  [hidden_units]  ->  2
-All units use a sigmoid activation: Y_k = 1 / (1 + exp(-X_k)).
+Architecture (three layers, forward-connected):
+
+    Input  — window_size * 21 units (default 357). One position per
+             residue in the sliding window; each position encoded as
+             20 one-hot amino acids + 1 null marker for sequence edges.
+    Hidden — hidden_units units (default 2). Omitted when
+             hidden_units=0, which collapses the network to logistic
+             regression (input → output directly).
+    Output — 2 units, h (helix signal) and s (beta-sheet signal).
+             Decoding (see psspnn.model.predict): a threshold
+             (default 0.37) gates the call, and the larger of h, s
+             wins when both exceed it. Examples:
+                 (h=0.85, s=0.10) -> H  (helix above threshold, wins)
+                 (h=0.08, s=0.72) -> E  (sheet above threshold, wins)
+                 (h=0.75, s=0.55) -> H  (both above, helix larger)
+                 (h=0.55, s=0.75) -> E  (both above, sheet larger)
+                 (h=0.15, s=0.22) -> C  (neither above threshold)
+             Coil (C) is emitted whenever neither unit clears the
+             threshold. Short runs of H/E may be further converted
+             to C by contiguity filtering.
+
+All units use sigmoid activation: Y_k = 1 / (1 + exp(-X_k)).
 
 When hidden_units=0 the hidden layer is omitted entirely, producing the
 input-to-output network analysed in Table 4 and Table 5 of the paper.
+
+This is retained as an ablation baseline: the paper's claim that a
+hidden layer improves accuracy only means something because the
+no-hidden-layer comparison exists. Keeping the option lets a reader
+re-run the ablation and verify the gap rather than taking the paper's
+word for it.
 """
 
 from __future__ import annotations
@@ -49,7 +74,10 @@ class HolleyKarplusNet:
         self.window_size = window_size
         self.hidden_units = hidden_units
         self.seed = seed
-        self.n_input: int = window_size * 21  # 357 for default window
+        # Each of the window_size residue positions is encoded with 21 features:
+        # 20 one-hot amino acids + 1 null marker for positions that fall past
+        # either end of the protein. Default: 17 * 21 = 357.
+        self.n_input: int = window_size * 21
         self._init_weights()
 
     # ------------------------------------------------------------------
@@ -121,7 +149,7 @@ class HolleyKarplusNet:
         Parameters
         ----------
         path : Path
-            Should have a .npz extension. A sidecar .json file is written
+            Should have a .npz extension. A JSON file is written
             at the same location with the extension replaced by .json.
         """
         path = Path(path)
