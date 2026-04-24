@@ -19,7 +19,7 @@ import numpy as np
 AMINO_ACIDS: str = "ACDEFGHIKLMNPQRSTVWY"
 AA_TO_IDX: dict[str, int] = {aa: i for i, aa in enumerate(AMINO_ACIDS)}
 NULL_IDX: int = 20  # index for the null/padding token
-N_AA: int = 21      # 20 amino acids + 1 null
+N_AA: int = 21  # 20 amino acids + 1 null
 
 # Target vectors for the two output units: (helix, sheet)
 # (1,0)=helix, (0,1)=sheet, (0,0)=coil

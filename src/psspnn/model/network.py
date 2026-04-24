@@ -63,7 +63,9 @@ class HolleyKarplusNet:
         """
         rng = np.random.default_rng(self.seed)
         if self.hidden_units > 0:
-            self.W1 = rng.uniform(-0.1, 0.1, (self.n_input, self.hidden_units)).astype(np.float32)
+            self.W1 = rng.uniform(-0.1, 0.1, (self.n_input, self.hidden_units)).astype(
+                np.float32
+            )
             self.b1 = rng.uniform(-0.1, 0.1, (self.hidden_units,)).astype(np.float32)
             self.W2 = rng.uniform(-0.1, 0.1, (self.hidden_units, 2)).astype(np.float32)
             self.b2 = rng.uniform(-0.1, 0.1, (2,)).astype(np.float32)
@@ -91,6 +93,7 @@ class HolleyKarplusNet:
         """
         X = np.asarray(X, dtype=np.float32)
         if self.hidden_units > 0:
+            assert self.W2 is not None and self.b2 is not None
             h = _sigmoid(X @ self.W1 + self.b1)
             return _sigmoid(h @ self.W2 + self.b2)
         else:
@@ -103,6 +106,7 @@ class HolleyKarplusNet:
     def get_weights(self) -> list[np.ndarray]:
         """Return model weights as a list of numpy arrays."""
         if self.hidden_units > 0:
+            assert self.W2 is not None and self.b2 is not None
             return [self.W1, self.b1, self.W2, self.b2]
         return [self.W1, self.b1]
 
@@ -123,6 +127,7 @@ class HolleyKarplusNet:
         path = Path(path)
         arrays: dict[str, np.ndarray] = {"W1": self.W1, "b1": self.b1}
         if self.hidden_units > 0:
+            assert self.W2 is not None and self.b2 is not None
             arrays["W2"] = self.W2
             arrays["b2"] = self.b2
         np.savez(path, **arrays)

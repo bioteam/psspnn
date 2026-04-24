@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 import pydssp
-from Bio.PDB import PDBParser
+from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB.Polypeptide import is_aa
 from Bio.Data.PDBData import protein_letters_3to1
 
@@ -26,15 +26,15 @@ log = logging.getLogger(__name__)
 
 # Map 8-state DSSP codes to 3-state H/E/C
 DSSP_TO_3STATE: dict[str, str] = {
-    "H": "H",   # alpha-helix
-    "G": "H",   # 3-10 helix
-    "I": "H",   # pi-helix
-    "E": "E",   # beta-strand
-    "B": "E",   # isolated beta-bridge
-    "T": "C",   # turn
-    "S": "C",   # bend
-    " ": "C",   # loop/coil
-    "-": "C",   # no assignment (pydssp fallback)
+    "H": "H",  # alpha-helix
+    "G": "H",  # 3-10 helix
+    "I": "H",  # pi-helix
+    "E": "E",  # beta-strand
+    "B": "E",  # isolated beta-bridge
+    "T": "C",  # turn
+    "S": "C",  # bend
+    " ": "C",  # loop/coil
+    "-": "C",  # no assignment (pydssp fallback)
 }
 
 
@@ -111,8 +111,16 @@ def assign_dssp(pdb_path: Path) -> tuple[str, list[str]]:
     for code in raw_codes:
         if isinstance(code, (int, np.integer)):
             # Some pydssp versions return integer codes; convert via index
-            int_to_char = {0: " ", 1: "H", 2: "B", 3: "E",
-                           4: "G", 5: "I", 6: "T", 7: "S"}
+            int_to_char = {
+                0: " ",
+                1: "H",
+                2: "B",
+                3: "E",
+                4: "G",
+                5: "I",
+                6: "T",
+                7: "S",
+            }
             char = int_to_char.get(int(code), " ")
         else:
             char = str(code)

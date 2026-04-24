@@ -37,6 +37,7 @@ def main(debug: bool) -> None:
 # download
 # ---------------------------------------------------------------------------
 
+
 @main.command()
 @click.option(
     "--cache-dir",
@@ -71,6 +72,7 @@ def download(cache_dir: Path, split: str) -> None:
 # train
 # ---------------------------------------------------------------------------
 
+
 @main.command()
 @click.option(
     "--cache-dir",
@@ -86,10 +88,20 @@ def download(cache_dir: Path, split: str) -> None:
     help="Output path for the model weights (.npz).",
 )
 @click.option("--window", default=17, show_default=True, help="Input window size.")
-@click.option("--hidden", default=2, show_default=True, help="Hidden layer size (0 = no hidden layer).")
+@click.option(
+    "--hidden",
+    default=2,
+    show_default=True,
+    help="Hidden layer size (0 = no hidden layer).",
+)
 @click.option("--lr", default=10.0, show_default=True, help="Learning rate.")
 @click.option("--max-cycles", default=2000, show_default=True)
-@click.option("--tol", default=2e-4, show_default=True, help="Fractional-change stopping threshold.")
+@click.option(
+    "--tol",
+    default=2e-4,
+    show_default=True,
+    help="Fractional-change stopping threshold.",
+)
 @click.option("--seed", default=None, type=int, help="Random seed for reproducibility.")
 @click.option("--verbose/--no-verbose", default=False, show_default=True)
 @click.option(
@@ -156,7 +168,9 @@ def train(
 
     if verbose:
         total_residues = sum(len(seq) for seq, _ in proteins)
-        click.echo(f"Building dataset from {len(proteins)} proteins ({total_residues} residues) …")
+        click.echo(
+            f"Building dataset from {len(proteins)} proteins ({total_residues} residues) …"
+        )
     X_train, y_train = build_dataset(proteins, window_size=window)
     if verbose:
         click.echo(f"  X shape: {X_train.shape}  y shape: {y_train.shape}")
@@ -167,15 +181,20 @@ def train(
         n_e = int((y_train[:, 1] > 0.5).sum())
         n_c = n - n_h - n_e
         click.echo(
-            f"  Composition: {n_h/n:.0%} H  {n_e/n:.0%} E  {n_c/n:.0%} C"
+            f"  Composition: {n_h / n:.0%} H  {n_e / n:.0%} E  {n_c / n:.0%} C"
             f"  (paper: 26% H  20% E  54% C)"
         )
 
         click.echo("Training …")
     net = HolleyKarplusNet(window_size=window, hidden_units=hidden, seed=seed)
     result = _train(
-        net, X_train, y_train,
-        learning_rate=lr, max_cycles=max_cycles, tol=tol, verbose=verbose,
+        net,
+        X_train,
+        y_train,
+        learning_rate=lr,
+        max_cycles=max_cycles,
+        tol=tol,
+        verbose=verbose,
         checkpoint_dir=checkpoint_dir,
         checkpoint_every=checkpoint_every,
         resume=resume,
@@ -196,6 +215,7 @@ def train(
 # ---------------------------------------------------------------------------
 # predict
 # ---------------------------------------------------------------------------
+
 
 @main.command()
 @click.argument("sequence")
@@ -250,6 +270,7 @@ def predict(
 # ---------------------------------------------------------------------------
 # evaluate
 # ---------------------------------------------------------------------------
+
 
 @main.command()
 @click.option(
@@ -319,17 +340,13 @@ def evaluate(
     metrics = full_evaluation(all_pred, all_actual)
     click.echo("-" * 25)
     click.echo(f"\nAggregate metrics ({split} set):")
-    click.echo(f"  Percent correct:  {metrics['percent_correct']:.1f}%"
-               f"  (paper: 63.2% test / 68.5% train)")
-    click.echo(f"  C_helix:          {metrics['C_helix']:.2f}"
-               f"  (paper: 0.41 test)")
-    click.echo(f"  C_sheet:          {metrics['C_sheet']:.2f}"
-               f"  (paper: 0.32 test)")
-    click.echo(f"  C_coil:           {metrics['C_coil']:.2f}"
-               f"  (paper: 0.36 test)")
-    click.echo(f"  PC(helix):        {metrics['PC_helix']:.1f}%"
-               f"  (paper: 59.2% test)")
-    click.echo(f"  PC(sheet):        {metrics['PC_sheet']:.1f}%"
-               f"  (paper: 53.3% test)")
-    click.echo(f"  PC(coil):         {metrics['PC_coil']:.1f}%"
-               f"  (paper: 66.9% test)")
+    click.echo(
+        f"  Percent correct:  {metrics['percent_correct']:.1f}%"
+        f"  (paper: 63.2% test / 68.5% train)"
+    )
+    click.echo(f"  C_helix:          {metrics['C_helix']:.2f}  (paper: 0.41 test)")
+    click.echo(f"  C_sheet:          {metrics['C_sheet']:.2f}  (paper: 0.32 test)")
+    click.echo(f"  C_coil:           {metrics['C_coil']:.2f}  (paper: 0.36 test)")
+    click.echo(f"  PC(helix):        {metrics['PC_helix']:.1f}%  (paper: 59.2% test)")
+    click.echo(f"  PC(sheet):        {metrics['PC_sheet']:.1f}%  (paper: 53.3% test)")
+    click.echo(f"  PC(coil):         {metrics['PC_coil']:.1f}%  (paper: 66.9% test)")

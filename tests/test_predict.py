@@ -154,9 +154,7 @@ class TestEndToEndMixed:
     # Sperm whale myoglobin B-E helix region with flanking coil and strand
     MYO_SEQ = "LFTGHPETLEKFDKFKHLKTEAEMKASEDLKKHGTVVLTALGGILK"
     #          CHHHHCHHHHHHCCCCHHHHHHHHHHHHHHHCCCEEECC HHHHHHHH
-    MYO_SS = list(
-        "CHHHHCHHHHHHCCCCHHHHHHHHHHHHHHCCCEEECCHHHHHHHH"
-    )
+    MYO_SS = list("CHHHHCHHHHHHCCCCHHHHHHHHHHHHHHCCCEEECCHHHHHHHH")
 
     @pytest.fixture(scope="class")
     def trained_net(self):

@@ -31,9 +31,11 @@ from .network import HolleyKarplusNet, _sigmoid
 # Result container
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class TrainingResult:
     """Summary statistics returned by train()."""
+
     n_cycles: int
     final_error: float
     error_history: list[float] = field(default_factory=list)
@@ -43,6 +45,7 @@ class TrainingResult:
 # ---------------------------------------------------------------------------
 # Loss (kept as a standalone function for testability)
 # ---------------------------------------------------------------------------
+
 
 def _sse(y_pred: np.ndarray, y_true: np.ndarray) -> float:
     """
@@ -57,6 +60,7 @@ def _sse(y_pred: np.ndarray, y_true: np.ndarray) -> float:
 # ---------------------------------------------------------------------------
 # Training loop
 # ---------------------------------------------------------------------------
+
 
 def train(
     net: HolleyKarplusNet,
@@ -140,13 +144,14 @@ def train(
         # Forward pass
         # ----------------------------------------------------------
         if net.hidden_units > 0:
-            z_h = X @ net.W1 + net.b1            # (N, hidden)
-            h = _sigmoid(z_h)                    # (N, hidden)
-            z_o = h @ net.W2 + net.b2            # (N, 2)
-            out = _sigmoid(z_o)                  # (N, 2)
+            assert net.W2 is not None and net.b2 is not None
+            z_h = X @ net.W1 + net.b1  # (N, hidden)
+            h = _sigmoid(z_h)  # (N, hidden)
+            z_o = h @ net.W2 + net.b2  # (N, 2)
+            out = _sigmoid(z_o)  # (N, 2)
         else:
-            z_o = X @ net.W1 + net.b1            # (N, 2)
-            out = _sigmoid(z_o)                  # (N, 2)
+            z_o = X @ net.W1 + net.b1  # (N, 2)
+            out = _sigmoid(z_o)  # (N, 2)
 
         # ----------------------------------------------------------
         # Loss
@@ -163,14 +168,15 @@ def train(
         N = X.shape[0]
 
         if net.hidden_units > 0:
-            dW2 = (h.T @ delta_out) / N           # (hidden, 2)
-            db2 = delta_out.sum(axis=0) / N       # (2,)
+            assert net.W2 is not None
+            dW2 = (h.T @ delta_out) / N  # (hidden, 2)
+            db2 = delta_out.sum(axis=0) / N  # (2,)
             delta_h = (delta_out @ net.W2.T) * h * (1.0 - h)  # (N, hidden)
-            dW1 = (X.T @ delta_h) / N             # (n_input, hidden)
-            db1 = delta_h.sum(axis=0) / N         # (hidden,)
+            dW1 = (X.T @ delta_h) / N  # (n_input, hidden)
+            db1 = delta_h.sum(axis=0) / N  # (hidden,)
         else:
-            dW1 = (X.T @ delta_out) / N           # (n_input, 2)
-            db1 = delta_out.sum(axis=0) / N       # (2,)
+            dW1 = (X.T @ delta_out) / N  # (n_input, 2)
+            db1 = delta_out.sum(axis=0) / N  # (2,)
 
         # ----------------------------------------------------------
         # Weight update (plain SGD, no momentum)
@@ -178,6 +184,7 @@ def train(
         net.W1 -= learning_rate * dW1
         net.b1 -= learning_rate * db1
         if net.hidden_units > 0:
+            assert net.W2 is not None and net.b2 is not None
             net.W2 -= learning_rate * dW2
             net.b2 -= learning_rate * db2
 
@@ -188,9 +195,12 @@ def train(
             ckpt_path = Path(checkpoint_dir)
             ckpt_path.mkdir(parents=True, exist_ok=True)
             arrays: dict[str, np.ndarray] = {
-                "W1": net.W1, "b1": net.b1, "cycle": np.array(cycle),
+                "W1": net.W1,
+                "b1": net.b1,
+                "cycle": np.array(cycle),
             }
             if net.hidden_units > 0:
+                assert net.W2 is not None and net.b2 is not None
                 arrays["W2"] = net.W2
                 arrays["b2"] = net.b2
             np.savez(ckpt_path / "checkpoint.npz", **arrays)
@@ -223,5 +233,3 @@ def train(
     result.n_cycles = cycle
     result.final_error = E
     return result
-
-

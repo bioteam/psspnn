@@ -136,10 +136,10 @@ def full_evaluation(
     """
     return {
         "percent_correct": percent_correct(predicted, actual),
-        "C_helix":  matthews_cc(predicted, actual, "H"),
-        "C_sheet":  matthews_cc(predicted, actual, "E"),
-        "C_coil":   matthews_cc(predicted, actual, "C"),
+        "C_helix": matthews_cc(predicted, actual, "H"),
+        "C_sheet": matthews_cc(predicted, actual, "E"),
+        "C_coil": matthews_cc(predicted, actual, "C"),
         "PC_helix": pc_state(predicted, actual, "H"),
         "PC_sheet": pc_state(predicted, actual, "E"),
-        "PC_coil":  pc_state(predicted, actual, "C"),
+        "PC_coil": pc_state(predicted, actual, "C"),
     }

@@ -120,7 +120,7 @@ def predict_sequence(
     dummy_ss = ["C"] * len(sequence)
     windows = [x for x, _ in sequence_windows(sequence, dummy_ss, window_size)]
     X = np.array(windows, dtype=np.float64)
-    raw_out = net.predict(X)                                   # (N, 2)
+    raw_out = net.predict(X)  # (N, 2)
     raw = raw_state(raw_out[:, 0], raw_out[:, 1], threshold)
     final = apply_contiguity(raw)
     return raw_out, final

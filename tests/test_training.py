@@ -60,7 +60,9 @@ class TestTrain:
         # tol=0.5 fires quickly: the initial rapid drop in error produces
         # frac_change < 0.5 within the first few cycles.
         result = train(
-            net, X, y,
+            net,
+            X,
+            y,
             learning_rate=0.1,
             max_cycles=100,
             tol=0.5,
@@ -107,7 +109,9 @@ class TestCheckpoint:
         with tempfile.TemporaryDirectory() as tmp:
             ckpt_dir = Path(tmp) / "ckpts"
             train(
-                net, X, y,
+                net,
+                X,
+                y,
                 max_cycles=5,
                 checkpoint_dir=ckpt_dir,
                 checkpoint_every=5,
@@ -125,7 +129,9 @@ class TestCheckpoint:
             # Phase 1: train for 5 cycles and save a checkpoint
             net1 = HolleyKarplusNet(window_size=5, hidden_units=2, seed=1)
             result1 = train(
-                net1, X, y,
+                net1,
+                X,
+                y,
                 max_cycles=5,
                 tol=1e-20,
                 checkpoint_dir=ckpt_dir,
@@ -137,7 +143,9 @@ class TestCheckpoint:
             # Phase 2: resume from the checkpoint; should start at cycle 6
             net2 = HolleyKarplusNet(window_size=5, hidden_units=2, seed=1)
             result2 = train(
-                net2, X, y,
+                net2,
+                X,
+                y,
                 max_cycles=10,
                 tol=1e-20,
                 checkpoint_dir=ckpt_dir,

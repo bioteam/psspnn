@@ -7,7 +7,6 @@ from psspnn.data.encoding import (
     AA_TO_IDX,
     N_AA,
     AMINO_ACIDS,
-    SS_TO_TARGET,
     build_dataset,
     encode_null,
     encode_residue,
@@ -35,7 +34,7 @@ class TestEncodeNull:
 
 class TestEncodeResidue:
     def test_known_aa(self):
-        aa = AMINO_ACIDS[0]          # first amino acid
+        aa = AMINO_ACIDS[0]  # first amino acid
         vec = encode_residue(aa)
         assert vec[0] == 1.0
         assert np.sum(vec) == 1.0
@@ -50,7 +49,7 @@ class TestEncodeResidue:
 
     def test_unknown_aa(self):
         vec = encode_residue("X")
-        assert vec[20] == 1.0          # null slot
+        assert vec[20] == 1.0  # null slot
         assert np.sum(vec) == 1.0
 
     def test_star_maps_to_null(self):
