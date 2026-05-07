@@ -1,6 +1,6 @@
 # psspnn
 
-This code reproduces the protein secondary structure prediction using a neural network described in Holley, L.H. & Karplus, M. (1989). Protein secondary structure prediction with a neural network. *Proc. Natl. Acad. Sci. USA* **86**, 152–156. [doi:10.1073/pnas.86.1.152](https://doi.org/10.1073/pnas.86.1.152) · [PubMed](https://pubmed.ncbi.nlm.nih.gov/2911565/)
+This code reproduces the protein secondary structure prediction neural network described in Holley, L.H. & Karplus, M. (1989). Protein secondary structure prediction with a neural network. *Proc. Natl. Acad. Sci. USA* **86**, 152–156. [doi:10.1073/pnas.86.1.152](https://doi.org/10.1073/pnas.86.1.152) · [PubMed](https://pubmed.ncbi.nlm.nih.gov/2911565/)
 
 ## Architecture
 
