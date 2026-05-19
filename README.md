@@ -44,12 +44,6 @@ Offset targets (0.1/0.9 instead of 0/1) prevent sigmoid saturation, which is sta
 ```bash
 git clone https://github.com/bioteam/psspnn.git
 cd psspnn
-poetry install
-```
-
-Or with pip:
-
-```bash
 pip install .
 ```
 
@@ -141,7 +135,7 @@ src/psspnn/
 ## Running tests
 
 ```bash
-poetry run pytest
+pytest
 ```
 
 ## Notes
